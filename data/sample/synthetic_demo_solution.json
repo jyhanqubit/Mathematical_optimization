@@ -1,0 +1,186 @@
+{
+  "operations": {
+    "0": [
+      {
+        "type": "ENTRY",
+        "block_id": 0,
+        "bay_id": 2,
+        "x": 0,
+        "y": 0,
+        "orient_idx": 0
+      },
+      {
+        "type": "ENTRY",
+        "block_id": 2,
+        "bay_id": 0,
+        "x": 0,
+        "y": 0,
+        "orient_idx": 0
+      }
+    ],
+    "1": [
+      {
+        "type": "ENTRY",
+        "block_id": 7,
+        "bay_id": 1,
+        "x": 0,
+        "y": 0,
+        "orient_idx": 0
+      },
+      {
+        "type": "ENTRY",
+        "block_id": 8,
+        "bay_id": 0,
+        "x": 20,
+        "y": 0,
+        "orient_idx": 0
+      },
+      {
+        "type": "ENTRY",
+        "block_id": 11,
+        "bay_id": 2,
+        "x": 16,
+        "y": 0,
+        "orient_idx": 0
+      }
+    ],
+    "3": [
+      {
+        "type": "ENTRY",
+        "block_id": 4,
+        "bay_id": 0,
+        "x": 38,
+        "y": 0,
+        "orient_idx": 0
+      },
+      {
+        "type": "ENTRY",
+        "block_id": 6,
+        "bay_id": 1,
+        "x": 18,
+        "y": 0,
+        "orient_idx": 0
+      }
+    ],
+    "4": [
+      {
+        "type": "EXIT",
+        "block_id": 2,
+        "bay_id": 0
+      },
+      {
+        "type": "EXIT",
+        "block_id": 8,
+        "bay_id": 0
+      },
+      {
+        "type": "ENTRY",
+        "block_id": 9,
+        "bay_id": 2,
+        "x": 0,
+        "y": 0,
+        "orient_idx": 0
+      }
+    ],
+    "6": [
+      {
+        "type": "EXIT",
+        "block_id": 0,
+        "bay_id": 2
+      },
+      {
+        "type": "ENTRY",
+        "block_id": 1,
+        "bay_id": 1,
+        "x": 0,
+        "y": 0,
+        "orient_idx": 0
+      }
+    ],
+    "7": [
+      {
+        "type": "EXIT",
+        "block_id": 6,
+        "bay_id": 1
+      },
+      {
+        "type": "EXIT",
+        "block_id": 9,
+        "bay_id": 2
+      },
+      {
+        "type": "ENTRY",
+        "block_id": 10,
+        "bay_id": 1,
+        "x": 0,
+        "y": 0,
+        "orient_idx": 0
+      }
+    ],
+    "8": [
+      {
+        "type": "EXIT",
+        "block_id": 7,
+        "bay_id": 1
+      },
+      {
+        "type": "ENTRY",
+        "block_id": 3,
+        "bay_id": 1,
+        "x": 0,
+        "y": 0,
+        "orient_idx": 0
+      },
+      {
+        "type": "ENTRY",
+        "block_id": 5,
+        "bay_id": 1,
+        "x": 0,
+        "y": 0,
+        "orient_idx": 0
+      }
+    ],
+    "5": [
+      {
+        "type": "EXIT",
+        "block_id": 11,
+        "bay_id": 2
+      }
+    ],
+    "11": [
+      {
+        "type": "EXIT",
+        "block_id": 4,
+        "bay_id": 0
+      }
+    ],
+    "9": [
+      {
+        "type": "EXIT",
+        "block_id": 1,
+        "bay_id": 1
+      }
+    ],
+    "15": [
+      {
+        "type": "EXIT",
+        "block_id": 10,
+        "bay_id": 1
+      }
+    ],
+    "12": [
+      {
+        "type": "EXIT",
+        "block_id": 3,
+        "bay_id": 1
+      }
+    ],
+    "16": [
+      {
+        "type": "EXIT",
+        "block_id": 5,
+        "bay_id": 1
+      }
+    ]
+  }
+}

@@ -1,0 +1,10 @@
+{
+  "name": "shipyard-block-optimization",
+  "image": "mcr.microsoft.com/devcontainers/python:3.12",
+  "postCreateCommand": "bash .devcontainer/postCreate.sh",
+  "forwardPorts": [8501],
+  "portsAttributes": { "8501": { "label": "Streamlit viz", "onAutoForward": "openBrowser" } },
+  "customizations": {
+    "vscode": { "extensions": ["ms-python.python", "ms-toolsai.jupyter"] }
+  }
+}

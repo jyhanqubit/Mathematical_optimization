@@ -1,0 +1,23 @@
+# 대회 제공 파일 (타 IP — 커밋 금지)
+competition/utils.py
+competition/baseline_greedy.py
+# 대회 training 데이터 (대회 자료 — 커밋 금지)
+data/train/
+
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+.ipynb_checkpoints/
+
+# OS / 에디터
+.DS_Store
+.idea/
+.vscode/
+
+# 시각화 출력
+viz_out/
+# 알고리즘이 생성한 해(샘플 해 synthetic_demo_solution.json 은 커밋 유지)
+data/train/*_solution.json

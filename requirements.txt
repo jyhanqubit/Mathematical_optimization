@@ -1,0 +1,9 @@
+# 핵심
+shapely>=2.0
+numpy>=1.23
+
+# 양자 PoC (선택) — 둘 중 무엇이든 무료
+# dwave-ocean-sdk        # D-Wave Leap 어닐러 + neal(고전 폴백)
+# qiskit                 # Qiskit QAOA
+# qiskit-optimization
+# qiskit-aer
