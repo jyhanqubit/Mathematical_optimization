@@ -54,7 +54,94 @@ OGC 2026 · The Grand Shipyard Puzzle / LG CNS AX Optimization Forum 2026
 목적값 = w1·Z1 + w2·Z2 + w3·Z3 이며, 데이터에서 w1이 압도적으로 큽니다(1일 지연이 다른 항 수백 점에 맞먹음).
 그래서 승부는 사실상 **지연을 얼마나 줄이느냐**에서 갈립니다.
 
+### 수식으로 정리
+
+기호: 블록 `i`, 작업장 `j`, 면적 보정 가중치 `u_j = (전체 작업장 평균 면적) / (작업장 j 면적)`.
+`load_j` 는 작업장 `j` 에 배정된 블록들의 workload 합입니다.
+
+목적함수 (작을수록 좋음)
+```
+Z1 = Σ_i  max(0, EXIT_i − due_i)                     # 납기 지연(일수 합)
+Z2 = max over (j,k)  | u_j·load_j − u_k·load_k |      # 작업 불균형(가장 바쁜 vs 한가한 작업장)
+Z3 = Σ_i  ( max_j pref(i,j) − pref(i, 배정된 작업장) ) # 선호 손실
+목적값 = w1·Z1 + w2·Z2 + w3·Z3   →  최소화
+```
+
+제약 (셋 다 만족해야 유효한 해)
+```
+담기   : 블록의 모든 꼭짓점이 배정된 작업장 사각형 안에 있을 것
+충돌없음: 같은 날 같은 층(layer)에 있는 두 블록의 내부가 겹치지 않을 것
+크레인 : 넣거나 뺄 때, 그 블록의 각 층이 다른 블록의 같은 높이 또는 더 높은 층과 겹치지 않을 것
+```
+`u_j` 보정은 큰 작업장이 같은 작업량이라도 덜 붐비는 점을 반영해 가중치를 낮춥니다.
+데이터에서 `w1` 이 `w2·w3` 보다 압도적이라(1일 지연 ≈ 수만 점), 사실상 **Z1(지연) 최소화가 승부처**입니다.
+
+
 ---
+
+## 데이터 명세
+
+입력은 인스턴스 하나가 JSON 파일 하나입니다. `bays`(작업장), `blocks`(블록), `weights`(가중치) 세 부분으로 이뤄집니다.
+
+### 필드 명세서
+
+**bays** — 작업장 목록 (0번부터 색인)
+
+| 필드 | 타입 | 단위 | 설명 |
+|---|---|---|---|
+| width | int | 격자칸 | 작업장 가로 |
+| height | int | 격자칸 | 작업장 세로 |
+
+**blocks** — 블록 목록 (0번부터 색인)
+
+| 필드 | 타입 | 단위 | 설명 |
+|---|---|---|---|
+| release_time | int | 일 | 투입 가능한 가장 이른 날 |
+| due_date | int | 일 | 납기일 |
+| processing_time | int | 일 | 처리에 걸리는 일수 |
+| workload | int | — | 작업량(불균형 Z2 계산에 사용) |
+| bay_preferences | int[ ] | 합 100 | 작업장별 선호 점수(높을수록 선호) |
+| shape | object[ ] | — | 방향별 도형. 원소 = `{ orientation:int, layers:[다각형,...] }` |
+
+**shape.layers** 의 다각형 = `[[x, y], ...]` 꼭짓점 목록. 첫 점은 기준점 `[0, 0]`, 나머지는 그에 대한 상대좌표(소수 가능). 층(layer)은 아래에서 위 순서.
+
+**weights** — 목적함수 가중치: `w1`, `w2`, `w3` (int).
+
+좌표 단위는 작업장과 같은 격자칸, 시간 단위는 일, 색인은 모두 0부터입니다.
+
+### 샘플 미리보기 (공개 샘플 · 동일 형식)
+
+> 실데이터는 대회 자료라 공개하지 않습니다. 아래는 형식이 같은 공개 합성 샘플(`data/sample/synthetic_demo.json`)입니다. 실데이터 규모는 위 "데이터 규모" 표를 참고하세요.
+
+- bays: 3개 — (60×16), (48×18), (40×14)
+- weights: w1=20000, w2=7, w3=150
+
+<details>
+<summary>블록 <code>head(5)</code> 펼쳐 보기 (스칼라 속성, 도형 제외)</summary>
+
+| id | release | due | proc | workload | preferences | 방향 수 | 층 수 |
+|---:|---:|---:|---:|---:|---|---:|---:|
+| 0 | 0 | 6 | 6 | 49 | [6, 37, 57] | 2 | 1 |
+| 1 | 6 | 12 | 3 | 19 | [28, 65, 7] | 2 | 1 |
+| 2 | 0 | 7 | 4 | 18 | [52, 2, 46] | 2 | 1 |
+| 3 | 8 | 12 | 4 | 51 | [23, 63, 14] | 2 | 1 |
+| 4 | 3 | 13 | 8 | 21 | [82, 9, 9] | 2 | 1 |
+
+</details>
+
+도형 예 — block 0, 방향 0, 층 0: `[[0,0], [15,0], [15,7], [0,7]]` (가로 15·세로 7 사각형). 실데이터는 보통 한 블록에 방향 8개, 각 층이 비정형 8각형 안팎입니다.
+
+### 출력(해) 형식
+
+`operations` 딕셔너리로, 날짜 → 그 날 수행할 작업 목록입니다.
+
+```jsonc
+{ "operations": {
+  "0": [ {"type":"ENTRY","block_id":3,"bay_id":1,"x":12,"y":0,"orient_idx":2} ],
+  "8": [ {"type":"EXIT","block_id":3,"bay_id":1} ]
+}}
+```
+ENTRY는 위치·방향까지, EXIT는 블록·작업장만 적습니다. 같은 날에는 EXIT를 ENTRY보다 먼저 두고, 좌표는 정수여야 합니다.
 
 ## 분석 흐름
 
@@ -116,6 +203,11 @@ OGC 2026 · The Grand Shipyard Puzzle / LG CNS AX Optimization Forum 2026
 ![공식 baseline 대비 개선 (실데이터 채점)](docs/figures/results_improvement.png)
 *그림. 어려운 인스턴스에서 공식 채점기로 측정한 baseline 대비 개선.*
 
+**사례 A·B·C는 무엇인가.** 혼잡을 일부러 강하게 만든 스트레스 테스트 인스턴스입니다. 블록이 작업장을 빡빡하게 채우도록 구성해, 개선 효과가 드러나는 어려운 상황을 재현했습니다. baseline과 내 알고리즘을 **공식 채점기로 똑같이 채점**해 비교했습니다. 쉬운 인스턴스는 baseline도 이미 지연이 0이라 차이가 없고, 차이는 이렇게 빡빡할 때 벌어집니다.
+
+**감소가 뜻하는 것.** 목적값은 `w1·Z1`(납기 지연)이 거의 전부를 좌우합니다(1일 지연이 수만 점). 그래서 목적값을 28.7% 줄였다는 말은 사실상 **지연을 크게 줄였다**는 뜻입니다. 현장 언어로 옮기면, 블록들이 납기에 더 가깝게 끝나 뒤 공정의 대기와 체선이 줄어듭니다. 같은 작업장·같은 블록이라도 충돌 없이 더 일찍·더 촘촘히 끼워 넣어, 늦게 들어가던 블록을 줄인 결과입니다.
+
+
 
 ---
 
@@ -140,6 +232,49 @@ OGC 2026 · The Grand Shipyard Puzzle / LG CNS AX Optimization Forum 2026
 
 
 ---
+
+## 양자 PoC 자세히
+
+### P1 ~ P20은 무엇인가
+공식 training 인스턴스 20개입니다(블록 100~300, 작업장 2~5, 가중치·일정 구성이 제각각). 위 회복률 차트에서 막대 하나가 인스턴스 하나이고, 세로축은 QUBO를 푼 배정이 **고전 최적 배정 대비 목적값이 얼마나 차이 나는지**(gap %)입니다. 0이면 최적을 그대로 회복, 음수면 오히려 더 나음을 뜻합니다.
+
+<details>
+<summary>P1~P20 규모별 구성 펼쳐 보기</summary>
+
+| 그룹 | 인스턴스 | 블록 수 | 작업장 수 |
+|---|---|---|---|
+| 소규모 | P1~P4 | 100 | 2~3 |
+| 중간 | P5~P8 | 150 | 2~3 |
+| 대규모 | P9~P16 | 200~250 | 3~4 |
+| 초대규모 | P17~P20 | 300 | 4~5 |
+
+가중치 범위: w1 8,889~29,630 · w2 4~10 · w3 125~200 (인스턴스마다 다름).
+
+</details>
+
+### 배정을 QUBO로 바꾸기
+변수 `x(i,j)=1` 은 블록 `i` 를 작업장 `j` 에 배정한다는 뜻입니다. 다음을 최소화합니다.
+```
+A·Σ_i ( Σ_j x(i,j) − 1 )²                  # 각 블록은 정확히 한 작업장 (위반 시 큰 페널티)
++ w3·Σ_(i,j) ( maxpref_i − pref(i,j) )·x(i,j)   # 선호 손실 Z3
++ w2'·Σ_j ( u_j · Σ_i L_i·x(i,j) )²        # 작업량 균형(Z2의 2차식 대용)
+```
+이 형태(QUBO)는 D-Wave 어닐러·Qiskit QAOA·고전 SA가 **모두 같은 방식으로** 받아 풀 수 있어, 백엔드만 바꿔 비교했습니다.
+
+### 왜 (이 데이터에선) 양자가 실익이 없나
+이 데이터는 `w3`(선호 125~200)가 `w2`(균형 4~10)보다 훨씬 큽니다. 그래서 배정의 최적해는 거의 "모두 최선호 작업장"이고, 블록마다 따로따로 정해도 됩니다(near-separable, 거의 분리 가능). 즉 배정은 **고전적으로 쉬운 문제**라 양자를 써도 더 나아질 여지가 거의 없습니다. 실제로 고전 SA가 20개 모두에서 최적을 그대로 회복했습니다(차트).
+
+### 그럼 양자가 실익을 줄 곳은 어디인가
+진짜 어려움은 압도적 가중치 `w1` 이 걸린 **지연(Z1)** 에 있고, 지연은 "한 작업장·한 시간창에 충돌 없이 어떤 블록들을 함께 넣을까"라는 선택에서 생깁니다. 이 선택은 **충돌 그래프 위의 최대 가중 독립집합**(서로 부딪치지 않는 블록을, 가치 합이 최대가 되도록 고르기) 문제입니다. NP-hard이고 변수들이 충돌로 촘촘히 얽혀 있어, 바로 이런 빽빽한 조합 선택이 양자(어닐링·QAOA)가 노려볼 만한 구조입니다.
+
+동시배치 QUBO 스케치 — 한 작업장·한 시간창에서 변수 `x(b)=1`(블록 b 투입):
+```
+minimize   A·Σ_(b,b'∈충돌) x(b)·x(b')   −   Σ_b value_b·x(b)
+            # 충돌쌍 동시선택 금지        # 납기 임박 블록을 많이·일찍 투입
+```
+충돌 행렬은 이미 만든 기하 엔진으로 미리 계산합니다.
+
+요약하면, 배정 QUBO는 "수식과 인터페이스가 올바르다"를 보인 검증용 데모이고, 양자의 실익은 배정이 아니라 **혼잡을 만드는 동시배치 선택**에 있습니다.
 
 ## 저장소 구조
 
@@ -297,7 +432,73 @@ The objective is a weighted sum:
 Objective = w1·Z1 + w2·Z2 + w3·Z3. In the data, w1 dominates by far (one day of delay rivals hundreds of
 points elsewhere), so the game is mostly about **reducing tardiness**.
 
+### Formulation
+
+Notation: block `i`, bay `j`, area weight `u_j = (mean bay area) / (area of bay j)`;
+`load_j` is the total workload of blocks assigned to bay `j`.
+
+Objective (smaller is better)
+```
+Z1 = Σ_i max(0, EXIT_i − due_i)                  # tardiness (sum of late days)
+Z2 = max over (j,k) | u_j·load_j − u_k·load_k |  # workload imbalance (busiest vs. idlest bay)
+Z3 = Σ_i ( max_j pref(i,j) − pref(i, assigned) ) # preference loss
+objective = w1·Z1 + w2·Z2 + w3·Z3   → minimize
+```
+Constraints (all must hold): containment (every vertex inside the bay), no overlap (interiors of two
+blocks on the same layer/day must not intersect), and crane feasibility (when a block enters or leaves,
+each of its layers must clear other blocks at the same or higher layer). Because `w1` dominates
+`w2·w3` (one day of delay is worth tens of thousands of points), the game is essentially **minimizing Z1**.
+
+
 ---
+
+## Data specification
+
+Each instance is one JSON file with three parts: `bays`, `blocks`, `weights`.
+
+**bays** (0-indexed): `width` (int, grid cells), `height` (int, grid cells).
+
+**blocks** (0-indexed):
+
+| Field | Type | Unit | Description |
+|---|---|---|---|
+| release_time | int | day | earliest day the block can enter |
+| due_date | int | day | due date |
+| processing_time | int | day | days needed to process |
+| workload | int | — | workload (used for imbalance Z2) |
+| bay_preferences | int[ ] | sums to 100 | per-bay preference score |
+| shape | object[ ] | — | per-orientation geometry: `{ orientation:int, layers:[polygon,...] }` |
+
+A polygon in `shape.layers` is a vertex list `[[x,y],...]`; the first vertex is the reference point
+`[0,0]` and the rest are relative (may be fractional). Layers go bottom to top. `weights` holds `w1,w2,w3`.
+
+### Sample preview (public sample, same schema)
+
+> Real instances are competition material and are not published. Below is the public synthetic sample
+> (`data/sample/synthetic_demo.json`); see "Data at a glance" above for the real-data scale.
+
+bays: (60×16), (48×18), (40×14) · weights: w1=20000, w2=7, w3=150
+
+<details>
+<summary>Expand <code>head(5)</code> of blocks (scalar fields, shapes omitted)</summary>
+
+| id | release | due | proc | workload | preferences | orients | layers |
+|---:|---:|---:|---:|---:|---|---:|---:|
+| 0 | 0 | 6 | 6 | 49 | [6, 37, 57] | 2 | 1 |
+| 1 | 6 | 12 | 3 | 19 | [28, 65, 7] | 2 | 1 |
+| 2 | 0 | 7 | 4 | 18 | [52, 2, 46] | 2 | 1 |
+| 3 | 8 | 12 | 4 | 51 | [23, 63, 14] | 2 | 1 |
+| 4 | 3 | 13 | 8 | 21 | [82, 9, 9] | 2 | 1 |
+
+</details>
+
+Shape example — block 0, orientation 0, layer 0: `[[0,0],[15,0],[15,7],[0,7]]` (a 15×7 rectangle).
+Real blocks typically have 8 orientations with irregular ~8-vertex layers.
+
+### Output (solution) format
+
+`operations` maps a day to the actions on that day. ENTRY carries position and orientation; EXIT carries
+only block and bay. On the same day, EXIT comes before ENTRY, and coordinates must be integers.
 
 ## Analysis workflow
 
@@ -363,6 +564,16 @@ The hard set drops by 7.3% in total. Easy instances tie because the baseline alr
 ![Improvement vs baseline (real-data scoring)](docs/figures/results_improvement.png)
 *Improvement over the official baseline on hard instances, measured with the official checker.*
 
+**What are cases A/B/C?** Stress-test instances built to be congestion-heavy, so improvement is visible.
+Baseline and my algorithm are scored on the same footing with the official checker. Easy instances tie
+because the baseline already reaches zero tardiness; the gap opens up only when packing is tight.
+
+**What the reduction means.** The objective is dominated by `w1·Z1` (tardiness), so a 28.7% drop means
+tardiness fell sharply — in plant terms, blocks finish closer to their due dates, reducing downstream
+waiting and congestion. With the same bays and blocks, fitting them in earlier and tighter (without
+collisions) leaves fewer late blocks.
+
+
 
 ---
 
@@ -389,6 +600,51 @@ The hard set drops by 7.3% in total. Easy instances tie because the baseline alr
 
 
 ---
+
+## Quantum PoC in detail
+
+**What are P1–P20?** The 20 official training instances (100–300 blocks, 2–5 bays, varied weights and
+schedules). In the recovery chart, each bar is one instance and the y-axis is the objective gap of the
+QUBO assignment versus the classical optimum (0 = recovers the optimum, negative = beats it).
+
+<details>
+<summary>P1–P20 size groups</summary>
+
+| Group | Instances | Blocks | Bays |
+|---|---|---|---|
+| Small | P1–P4 | 100 | 2–3 |
+| Medium | P5–P8 | 150 | 2–3 |
+| Large | P9–P16 | 200–250 | 3–4 |
+| Extra-large | P17–P20 | 300 | 4–5 |
+
+Weight ranges: w1 8,889–29,630 · w2 4–10 · w3 125–200 (varies per instance).
+
+</details>
+
+**Assignment as a QUBO.** With `x(i,j)=1` meaning "block i in bay j":
+```
+A·Σ_i ( Σ_j x(i,j) − 1 )²                    # exactly one bay per block (penalty)
++ w3·Σ_(i,j) ( maxpref_i − pref(i,j) )·x(i,j)    # preference loss Z3
++ w2'·Σ_j ( u_j · Σ_i L_i·x(i,j) )²          # workload balance (quadratic surrogate for Z2)
+```
+This QUBO form is fed identically to a D-Wave annealer, Qiskit QAOA, and classical SA.
+
+**Why quantum gives no edge on this data.** Here `w3` (preference, 125–200) far exceeds `w2` (balance,
+4–10), so the optimal assignment is essentially "everyone to their most preferred bay" and decomposes per
+block (near-separable). Assignment is therefore an easy classical problem, and SA recovers the optimum on
+all 20 instances.
+
+**Where quantum could actually help.** The real difficulty sits in tardiness (Z1), carrying the dominant
+`w1`. Tardiness comes from choosing *which blocks to co-place in one bay and time window without colliding*
+— a **maximum-weight independent set** on a conflict graph (NP-hard, densely coupled). That is the kind of
+tightly-coupled combinatorial selection an annealer/QAOA is suited to. Sketch (one bay, one window,
+`x(b)=1` if block b is placed):
+```
+minimize  A·Σ_(b,b' conflict) x(b)·x(b')  −  Σ_b value_b·x(b)
+```
+with the conflict matrix precomputed by the existing geometry engine. In short, the assignment QUBO
+validates the formulation and interface; the real quantum opportunity is the co-placement that drives
+congestion, not assignment.
 
 ## Repository layout
 
