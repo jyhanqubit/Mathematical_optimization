@@ -60,18 +60,20 @@ OGC 2026 · The Grand Shipyard Puzzle / LG CNS AX Optimization Forum 2026
 `load_j` 는 작업장 `j` 에 배정된 블록들의 workload 합입니다.
 
 목적함수 (작을수록 좋음)
-$$
+
+```math
 \begin{aligned}
-Z_1 &= \sum_i \max\!\left(0,\; \mathrm{EXIT}_i - \mathrm{due}_i\right) &&\text{(tardiness)}\\
-Z_2 &= \max_{j \neq k} \left\lvert\, u_j\,\mathrm{load}_j - u_k\,\mathrm{load}_k \,\right\rvert &&\text{(imbalance)}\\
-Z_3 &= \sum_i \left( \max_j \mathrm{pref}(i,j) - \mathrm{pref}(i,\, j(i)) \right) &&\text{(preference loss)}\\
-\text{objective} &= w_1 Z_1 + w_2 Z_2 + w_3 Z_3 \quad\longrightarrow\ \min
+Z_1 &= \sum_i \max\left(0,\ \mathrm{EXIT}_i - \mathrm{due}_i\right) \\
+Z_2 &= \max_{j \neq k} \left| u_j\,\mathrm{load}_j - u_k\,\mathrm{load}_k \right| \\
+Z_3 &= \sum_i \left( \max_j \mathrm{pref}(i,j) - \mathrm{pref}(i,\ j(i)) \right) \\
+\text{objective} &= w_1 Z_1 + w_2 Z_2 + w_3 Z_3
 \end{aligned}
-$$
+```
 
 여기서 $u_j = \dfrac{\frac{1}{m}\sum_k W_k H_k}{W_j H_j}$ 는 면적 보정 가중치이고, $\mathrm{load}_j$ 는 작업장 $j$ 에 배정된 블록들의 workload 합입니다.
 
 제약 (셋 다 만족해야 유효한 해)
+
 - 투입·처리: $\mathrm{ENTRY}_i \ge R_i,\quad \mathrm{EXIT}_i - \mathrm{ENTRY}_i \ge P_i$
 - 담기: 블록의 모든 꼭짓점이 배정된 작업장 사각형 안에 있을 것
 - 충돌 없음: 같은 날 같은 층(layer)에 있는 두 블록의 내부가 겹치지 않을 것
@@ -257,11 +259,12 @@ ENTRY는 위치·방향까지, EXIT는 블록·작업장만 적습니다. 같은
 
 ### 배정을 QUBO로 바꾸기
 변수 `x(i,j)=1` 은 블록 `i` 를 작업장 `j` 에 배정한다는 뜻입니다. 다음을 최소화합니다.
-$$
+
+```math
 \min\;\; \underbrace{A \sum_i \Big(\sum_j x_{ij} - 1\Big)^2}_{\text{one bay / block}}
 \;+\; \underbrace{w_3 \sum_{i,j} \big(\mathrm{pref}^{\max}_i - \mathrm{pref}_{ij}\big)\, x_{ij}}_{Z_3}
 \;+\; \underbrace{w_2' \sum_j \Big(u_j \sum_i L_i\, x_{ij}\Big)^2}_{\text{balance }(Z_2)}
-$$
+```
 
 $x_{ij}\in\{0,1\}$ 은 블록 $i$ 를 작업장 $j$ 에 배정하면 1입니다 ($A$ 는 충분히 큰 페널티).
 이 형태(QUBO)는 D-Wave 어닐러·Qiskit QAOA·고전 SA가 **모두 같은 방식으로** 받아 풀 수 있어, 백엔드만 바꿔 비교했습니다.
@@ -273,9 +276,10 @@ $x_{ij}\in\{0,1\}$ 은 블록 $i$ 를 작업장 $j$ 에 배정하면 1입니다 
 진짜 어려움은 압도적 가중치 `w1` 이 걸린 **지연(Z1)** 에 있고, 지연은 "한 작업장·한 시간창에 충돌 없이 어떤 블록들을 함께 넣을까"라는 선택에서 생깁니다. 이 선택은 **충돌 그래프 위의 최대 가중 독립집합**(서로 부딪치지 않는 블록을, 가치 합이 최대가 되도록 고르기) 문제입니다. NP-hard이고 변수들이 충돌로 촘촘히 얽혀 있어, 바로 이런 빽빽한 조합 선택이 양자(어닐링·QAOA)가 노려볼 만한 구조입니다.
 
 동시배치 QUBO 스케치 — 한 작업장·한 시간창에서 변수 `x(b)=1`(블록 b 투입):
-$$
+
+```math
 \min\;\; A \!\!\sum_{(b,b')\,\in\,\text{conflict}}\!\! x_b\, x_{b'} \;\;-\;\; \sum_b \mathrm{value}_b\, x_b
-$$
+```
 
 충돌쌍은 동시에 못 고르도록 벌점을 주고($A$), 납기 임박 블록일수록 $\mathrm{value}_b$ 를 크게 둬 많이·일찍 투입되게 합니다.
 충돌 행렬은 이미 만든 기하 엔진으로 미리 계산합니다.
@@ -444,14 +448,15 @@ Notation: block `i`, bay `j`, area weight `u_j = (mean bay area) / (area of bay 
 `load_j` is the total workload of blocks assigned to bay `j`.
 
 Objective (smaller is better)
-$$
+
+```math
 \begin{aligned}
-Z_1 &= \sum_i \max\!\left(0,\; \mathrm{EXIT}_i - \mathrm{due}_i\right) &&\text{(tardiness)}\\
-Z_2 &= \max_{j \neq k} \left\lvert\, u_j\,\mathrm{load}_j - u_k\,\mathrm{load}_k \,\right\rvert &&\text{(imbalance)}\\
-Z_3 &= \sum_i \left( \max_j \mathrm{pref}(i,j) - \mathrm{pref}(i,\, j(i)) \right) &&\text{(preference loss)}\\
-\text{objective} &= w_1 Z_1 + w_2 Z_2 + w_3 Z_3 \quad\longrightarrow\ \min
+Z_1 &= \sum_i \max\left(0,\ \mathrm{EXIT}_i - \mathrm{due}_i\right) \\
+Z_2 &= \max_{j \neq k} \left| u_j\,\mathrm{load}_j - u_k\,\mathrm{load}_k \right| \\
+Z_3 &= \sum_i \left( \max_j \mathrm{pref}(i,j) - \mathrm{pref}(i,\ j(i)) \right) \\
+\text{objective} &= w_1 Z_1 + w_2 Z_2 + w_3 Z_3
 \end{aligned}
-$$
+```
 
 where $u_j = \dfrac{\frac{1}{m}\sum_k W_k H_k}{W_j H_j}$ is the area-correction weight and $\mathrm{load}_j$ is the total workload assigned to bay $j$.
 Constraints (all must hold): containment (every vertex inside the bay), no overlap (interiors of two
@@ -632,11 +637,13 @@ Weight ranges: w1 8,889–29,630 · w2 4–10 · w3 125–200 (varies per instan
 </details>
 
 **Assignment as a QUBO.** With `x(i,j)=1` meaning "block i in bay j":
-$$
+
+```math
 \min\;\; \underbrace{A \sum_i \Big(\sum_j x_{ij} - 1\Big)^2}_{\text{one bay per block}}
 \;+\; \underbrace{w_3 \sum_{i,j} \big(\mathrm{pref}^{\max}_i - \mathrm{pref}_{ij}\big)\, x_{ij}}_{Z_3}
 \;+\; \underbrace{w_2' \sum_j \Big(u_j \sum_i L_i\, x_{ij}\Big)^2}_{\text{balance }(Z_2)}
-$$
+```
+
 This QUBO form is fed identically to a D-Wave annealer, Qiskit QAOA, and classical SA.
 
 **Why quantum gives no edge on this data.** Here `w3` (preference, 125–200) far exceeds `w2` (balance,
@@ -649,9 +656,11 @@ all 20 instances.
 — a **maximum-weight independent set** on a conflict graph (NP-hard, densely coupled). That is the kind of
 tightly-coupled combinatorial selection an annealer/QAOA is suited to. Sketch (one bay, one window,
 `x(b)=1` if block b is placed):
-$$
+
+```math
 \min\;\; A \!\!\sum_{(b,b')\,\in\,\text{conflict}}\!\! x_b\, x_{b'} \;\;-\;\; \sum_b \mathrm{value}_b\, x_b
-$$
+```
+
 with the conflict matrix precomputed by the existing geometry engine. In short, the assignment QUBO
 validates the formulation and interface; the real quantum opportunity is the co-placement that drives
 congestion, not assignment.
