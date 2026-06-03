@@ -60,14 +60,14 @@ OGC 2026 · The Grand Shipyard Puzzle / LG CNS AX Optimization Forum 2026
 `load_j` 는 작업장 `j` 에 배정된 블록들의 workload 합입니다.
 
 목적함수 (작을수록 좋음)
-$
+$$
 \begin{aligned}
-Z_1 &= \sum_i \max\!\left(0,\; \mathrm{EXIT}_i - \mathrm{due}_i\right) &&\text{(tardiness)}\\
-Z_2 &= \max_{j \neq k} \left\lvert\, u_j\,\mathrm{load}_j - u_k\,\mathrm{load}_k \,\right\rvert &&\text{(imbalance)}\\
-Z_3 &= \sum_i \left( \max_j \mathrm{pref}(i,j) - \mathrm{pref}(i,\, j(i)) \right) &&\text{(preference loss)}\\
-\text{objective} &= w_1 Z_1 + w_2 Z_2 + w_3 Z_3 \quad\longrightarrow\ \min
+Z_1 &= \sum_i \max\left(0,\ \mathrm{EXIT}_i - \mathrm{due}_i\right) \\
+Z_2 &= \max_{j \neq k} \left| u_j\,\mathrm{load}_j - u_k\,\mathrm{load}_k \right| \\
+Z_3 &= \sum_i \left( \max_j \mathrm{pref}(i,j) - \mathrm{pref}(i, j(i)) \right) \\
+\text{objective} &= w_1 Z_1 + w_2 Z_2 + w_3 Z_3
 \end{aligned}
-$
+$$
 
 여기서 $u_j = \dfrac{\frac{1}{m}\sum_k W_k H_k}{W_j H_j}$ 는 면적 보정 가중치이고, $\mathrm{load}_j$ 는 작업장 $j$ 에 배정된 블록들의 workload 합입니다.
 
