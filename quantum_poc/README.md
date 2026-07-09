@@ -1,16 +1,16 @@
-# 물류 블록배치 × 양자 PoC — "Hybrid Orchestration"
+# 물류 블록배치 × 양자 PoC: "Hybrid Orchestration"
 
 LG CNS의 Quantum-Augmented PoC와 같은 프레이밍으로, 우리 조선소 블록배치 문제에
-양자(quantum) 하위문제를 붙인 개념검증(PoC)입니다.
+양자(quantum) 하위문제를 붙인 개념검증(PoC)이다.
 
-## 0. 가장 먼저 — 정직한 메시지
-이 PoC는 "양자가 더 빠르다/우월하다"를 주장하지 않습니다. 무료로 쓸 수 있는 현재 양자 자원으로는
+## 0. 가장 먼저: 정직한 메시지
+이 PoC는 "양자가 더 빠르다/우월하다"를 주장하지 않는다. 무료로 쓸 수 있는 현재 양자 자원으로는
 우리 문제 전체(블록 100개·실수좌표·비정형 다각형)를 풀 수 없고, 고전(classical)이 거의 항상
-더 좋은 답을 더 빨리 냅니다. 핵심 메시지는 LG CNS와 동일하게:
+더 좋은 답을 더 빨리 낸다. 핵심 메시지는 LG CNS와 같다.
 
   "고전 자원이 큰 문제를 축소·분해하고, 그 작은 하위문제만 양자에 넘긴다 (Hybrid Orchestration)."
 
-## 1. 무엇을 양자로 푸는가 — '블록 → bay 배정' 하위문제
+## 1. 무엇을 양자로 푸는가: '블록 → bay 배정' 하위문제
 - 배정은 본질적으로 이산 선택이라 QUBO(양자 표준형)로 깔끔히 전환됨.
 - 우리 목적함수의 Z2(작업 불균형)·Z3(선호 손실)가 '배정만'으로 정의됨 → 양자가 푸는 부분과
   평가지표가 직접 연결.
@@ -79,4 +79,3 @@ python integrate_pipeline.py --backend sa
 - `run_benchmark_batch.py`(training_tools, shapely 환경): baseline vs myalgorithm 일괄 채점.
 - 기존 단일-인스턴스 도구(demo_local/run_dwave/run_qiskit/integrate_pipeline)는 train/*.json 도
   그대로 인자로 받는다.
-"""
